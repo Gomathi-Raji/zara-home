@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Orb from "@/components/Orb";
 
 type OrbState = "idle" | "listening" | "thinking" | "speaking";
@@ -13,6 +13,8 @@ interface ZaraCoreProps {
 }
 
 const ZaraCore = ({ state, audioStream, visuals, title = "Hello, I'm ZARA.", subtitle }: ZaraCoreProps) => {
+  const isActive = state !== "idle";
+
   return (
     <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
       <motion.div
@@ -24,26 +26,37 @@ const ZaraCore = ({ state, audioStream, visuals, title = "Hello, I'm ZARA.", sub
         <Orb state={state} audioStream={audioStream} visuals={visuals} />
       </motion.div>
 
-      <div className="absolute bottom-32 z-20 flex w-full flex-col items-center px-6 text-center">
-        <motion.h2
-          className="text-lg font-medium text-foreground/95"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18 }}
-        >
-          {title}
-        </motion.h2>
-        {subtitle !== undefined && subtitle !== null && (
-          <motion.p
-            className="mt-2 text-xs font-light text-muted-foreground/60"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.28 }}
+      <AnimatePresence mode="wait">
+        {!isActive && (
+          <motion.div
+            key="greeting"
+            className="absolute top-1/2 z-20 flex w-full flex-col items-center px-6 text-center"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.4 }}
           >
-            {subtitle}
-          </motion.p>
+            <motion.h2
+              className="max-w-[16rem] text-xl font-medium leading-tight text-foreground/95 sm:max-w-none sm:text-2xl md:text-3xl"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              {title}
+            </motion.h2>
+            {subtitle !== undefined && subtitle !== null && (
+              <motion.p
+                className="mt-2 max-w-[20rem] text-sm font-light leading-relaxed text-muted-foreground/60 sm:max-w-none sm:text-xs"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.32 }}
+              >
+                {subtitle}
+              </motion.p>
+            )}
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };

@@ -7,6 +7,10 @@ interface ResponseDisplayProps {
 }
 
 const ResponseDisplay = ({ text, subtext }: ResponseDisplayProps) => {
+  if (!text || text.trim() === "") {
+    return null;
+  }
+
   return (
     <div className="absolute bottom-32 z-10 flex w-full flex-col items-center gap-2 px-6 text-center">
       <AnimatePresence mode="wait">

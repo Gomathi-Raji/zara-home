@@ -146,7 +146,7 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
             <SheetDescription className="text-[11px] leading-relaxed text-white/45">Control layer for voice-first intelligence</SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 space-y-7 overflow-y-auto px-4 pb-8 sm:space-y-8 sm:px-5">
+          <div className="no-scrollbar flex-1 space-y-7 overflow-y-auto px-4 pb-8 sm:space-y-8 sm:px-5">
             <SettingsSection title="AI Control">
               <SettingRow icon={BrainCircuit} label="Reasoning Mode" alignTop>
                 <SegmentedControl

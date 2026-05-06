@@ -17,11 +17,6 @@ const modeLabel: Record<ResponseMode, string> = {
   offline: "Offline",
 };
 
-const presenceLabel: Record<PresenceMode, string> = {
-  virtual: "Virtual",
-  physical: "Physical",
-};
-
 const TopBar = ({
   mode,
   presence,
@@ -37,9 +32,6 @@ const TopBar = ({
       <div className="flex max-w-[78vw] flex-wrap items-center justify-end gap-2 sm:max-w-none">
         <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[9px] font-light uppercase tracking-[0.18em] text-white/55 sm:px-3 sm:text-[10px]">
           {modeLabel[mode]}
-        </span>
-        <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[9px] font-light uppercase tracking-[0.18em] text-white/55 sm:px-3 sm:text-[10px]">
-          {presenceLabel[presence]}
         </span>
         {homeAutomation ? (
           <span className="rounded-full border border-amber-300/40 bg-amber-300/12 px-2.5 py-1 text-[9px] font-light uppercase tracking-[0.18em] text-amber-100/90 sm:px-3 sm:text-[10px]">
