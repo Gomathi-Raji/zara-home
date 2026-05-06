@@ -1,0 +1,65 @@
+from __future__ import annotations
+
+import httpx
+
+from app.config import Settings
+
+
+class OllamaClient:
+    def __init__(self, http_client: httpx.AsyncClient, settings: Settings) -> None:
+        self.http_client = http_client
+        self.settings = settings
+
+    async def generate(
+        self,
+        prompt: str,
+        model: str | None = None,
+        response_language: str | None = None,
+        timeout_s: float | None = None,
+    ) -> str:
+        allowed_languages = "English, Hindi, Tamil, Telugu, Malayalam"
+
+        if response_language:
+            language_instruction = (
+                f"Detected user language: {response_language}. "
+                f"Reply only in {response_language}. "
+                f"Do not switch to any language outside: {allowed_languages}."
+            )
+        else:
+            language_instruction = (
+                "Detect the latest user language and reply in the same language only if it is one of "
+                f"{allowed_languages}. For any other language, reply in English."
+            )
+
+        payload = {
+            "model": model or self.settings.ollama_model,
+            "prompt": prompt,
+            "system": (
+                "You are ZARA AI, a helpful conversational assistant. "
+                f"{language_instruction} "
+                "If the input is unclear or from another language, infer likely intent and answer helpfully in English. "
+                "Never say you cannot understand or speak English, Hindi, Tamil, Telugu, or Malayalam. "
+                "Never reply with refusal templates like 'I do not understand this language' or 'Please use English'. "
+                "Respond in natural complete sentences and avoid one-word answers unless explicitly requested."
+            ),
+            "stream": False,
+            "options": {
+                "temperature": 0.6,
+                "num_ctx": self.settings.ollama_num_ctx,
+                "num_predict": self.settings.ollama_num_predict,
+                "top_k": 20,
+            },
+        }
+
+        response = await self.http_client.post(
+            "/api/generate",
+            json=payload,
+            timeout=timeout_s or self.settings.ollama_timeout_s,
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        text = (data.get("response") or "").strip()
+        if not text:
+            raise RuntimeError("Ollama returned an empty response")
+        return text

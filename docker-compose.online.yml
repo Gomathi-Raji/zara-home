@@ -1,0 +1,83 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - zara
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      PORT: "8000"
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      HOME_MQTT_HOST: ${HOME_MQTT_HOST:-mosquitto}
+      HOME_MQTT_PORT: ${HOME_MQTT_PORT:-1883}
+      HOME_MQTT_USERNAME: ${HOME_MQTT_USERNAME:-}
+      HOME_MQTT_PASSWORD: ${HOME_MQTT_PASSWORD:-}
+      HOME_MQTT_TLS_ENABLED: ${HOME_MQTT_TLS_ENABLED:-false}
+      HOME_MQTT_TLS_INSECURE: ${HOME_MQTT_TLS_INSECURE:-false}
+      HOME_MQTT_TLS_CA_CERT: ${HOME_MQTT_TLS_CA_CERT:-}
+      HOME_MQTT_TLS_CERTFILE: ${HOME_MQTT_TLS_CERTFILE:-}
+      HOME_MQTT_TLS_KEYFILE: ${HOME_MQTT_TLS_KEYFILE:-}
+    restart: unless-stopped
+    networks:
+      - zara
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      FRONTEND_DOMAIN: ${FRONTEND_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - zara
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    profiles:
+      - selfhosted-mqtt
+    ports:
+      - "${MQTT_PUBLIC_PORT:-1883}:1883"
+    volumes:
+      - ./deploy/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./deploy/mosquitto/passwd:/mosquitto/config/passwd:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - zara
+
+networks:
+  zara:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
+  mosquitto_data:
+  mosquitto_log:

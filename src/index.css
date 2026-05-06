@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 92%;
+
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 92%;
+
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 92%;
+
+    --primary: 190 100% 50%;
+    --primary-foreground: 0 0% 2%;
+
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 70%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 190 100% 50%;
+    --accent-foreground: 0 0% 2%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 190 100% 50%;
+
+    --radius: 9999px;
+
+    --orb-glow: 190 100% 50%;
+    --orb-core: 190 80% 70%;
+    --text-soft: 0 0% 92%;
+    --text-dim: 0 0% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes orb-ring-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orb-pulse {
+  0%, 100% { box-shadow: 0 0 60px 20px hsl(var(--orb-glow) / 0.15), 0 0 120px 40px hsl(var(--orb-glow) / 0.05); }
+  50% { box-shadow: 0 0 80px 30px hsl(var(--orb-glow) / 0.25), 0 0 160px 60px hsl(var(--orb-glow) / 0.08); }
+}
+
+@keyframes text-fade-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
