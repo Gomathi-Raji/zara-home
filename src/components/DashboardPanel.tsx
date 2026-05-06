@@ -197,6 +197,36 @@ const ADVANCED_ACTIONS: Array<{ label: string; action: HomeAction; description: 
   { label: "All Off", action: "all_off", description: "Shut down the whole ecosystem" },
 ];
 
+const SCENE_ACTIONS: Array<{ label: string; action: HomeAction; description: string }> = [
+  { label: "Good Morning", action: "scene_good_morning", description: "Wake the room with a brighter, active setup" },
+  { label: "Home Mode", action: "scene_home", description: "Balanced everyday comfort" },
+  { label: "Away Mode", action: "scene_away", description: "Lower energy use and secure the room" },
+  { label: "Good Night", action: "scene_good_night", description: "Prepare the space for sleep" },
+];
+
+const COMFORT_ACTIONS: Array<{ label: string; action: HomeAction; description: string }> = [
+  { label: "Lights On", action: "light_on", description: "Increase room visibility" },
+  { label: "Lights Off", action: "light_off", description: "Create a dimmer atmosphere" },
+  { label: "Fan On", action: "fan_on", description: "Start air circulation" },
+  { label: "Fan Off", action: "fan_off", description: "Stop room airflow" },
+  { label: "AC On", action: "ac_on", description: "Cool the room" },
+  { label: "AC Off", action: "ac_off", description: "Stop cooling" },
+];
+
+const ACCESS_ACTIONS: Array<{ label: string; action: HomeAction; description: string }> = [
+  { label: "Open Curtains", action: "curtain_open", description: "Let in more daylight" },
+  { label: "Close Curtains", action: "curtain_close", description: "Reduce light and increase privacy" },
+  { label: "Unlock Door", action: "door_unlock", description: "Release the entry lock" },
+  { label: "Lock Door", action: "door_lock", description: "Secure the entry lock" },
+];
+
+const MEDIA_ACTIONS: Array<{ label: string; action: HomeAction; description: string }> = [
+  { label: "TV On", action: "tv_on", description: "Bring media online" },
+  { label: "TV Off", action: "tv_off", description: "Power down media" },
+  { label: "All On", action: "all_on", description: "Enable every controllable device" },
+  { label: "All Off", action: "all_off", description: "Shut down everything at once" },
+];
+
 const INITIAL_ROOM_DEVICES: RoomDevice[] = [
   { id: "light", label: "Lights", on: false, actionOn: "light_on", actionOff: "light_off", description: "Primary room illumination" },
   { id: "fan", label: "Fan", on: false, actionOn: "fan_on", actionOff: "fan_off", description: "Air circulation and comfort" },
@@ -528,62 +558,113 @@ const DashboardPanel = ({
                   </div>
                 </section>
 
-                <section className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
+                <section className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/38">
-                    <PlugZap className="h-4 w-4 text-cyan-100/75" /> Advanced Options
+                    <PlugZap className="h-4 w-4 text-cyan-100/75" /> More Options
                   </div>
 
-                  <div className="grid gap-3">
-                    {ADVANCED_ACTIONS.map((item) => (
-                      <motion.button
-                        key={item.action}
-                        type="button"
-                        whileHover={{ y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => void runAdvancedAction(item.action)}
-                        className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-4 text-left transition-colors duration-300 hover:border-cyan-300/25"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                      <p className="text-[10px] uppercase tracking-[0.22em] text-white/34">Scenes</p>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {SCENE_ACTIONS.map((item) => (
+                          <motion.button
+                            key={item.action}
+                            type="button"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => void runAdvancedAction(item.action)}
+                            className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-3 text-left transition-colors duration-300 hover:border-cyan-300/25"
+                          >
                             <p className="text-sm font-light text-[#EAEAEA]">{item.label}</p>
                             <p className="mt-1 text-[11px] leading-relaxed text-white/38">{item.description}</p>
-                          </div>
-                          <Sparkles className="h-4 w-4 text-cyan-100/70" />
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={copySnapshot}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-[11px] uppercase tracking-[0.2em] text-white/65 transition-colors duration-300 hover:border-cyan-300/25 hover:text-white/85"
-                    >
-                      Copy Snapshot
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleRefresh}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-[11px] uppercase tracking-[0.2em] text-white/65 transition-colors duration-300 hover:border-cyan-300/25 hover:text-white/85"
-                    >
-                      Refresh Analysis
-                    </button>
-                  </div>
+                    <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                      <p className="text-[10px] uppercase tracking-[0.22em] text-white/34">Comfort</p>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {COMFORT_ACTIONS.map((item) => (
+                          <motion.button
+                            key={item.action}
+                            type="button"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => void runAdvancedAction(item.action)}
+                            className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-3 text-left transition-colors duration-300 hover:border-cyan-300/25"
+                          >
+                            <p className="text-sm font-light text-[#EAEAEA]">{item.label}</p>
+                            <p className="mt-1 text-[11px] leading-relaxed text-white/38">{item.description}</p>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
 
-                  <AnimatePresence initial={false}>
-                    {actionMessage ? (
-                      <motion.p
-                        key={actionMessage}
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        className="text-[11px] text-white/44"
+                    <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                      <p className="text-[10px] uppercase tracking-[0.22em] text-white/34">Access & Media</p>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {ACCESS_ACTIONS.map((item) => (
+                          <motion.button
+                            key={item.action}
+                            type="button"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => void runAdvancedAction(item.action)}
+                            className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-3 text-left transition-colors duration-300 hover:border-cyan-300/25"
+                          >
+                            <p className="text-sm font-light text-[#EAEAEA]">{item.label}</p>
+                            <p className="mt-1 text-[11px] leading-relaxed text-white/38">{item.description}</p>
+                          </motion.button>
+                        ))}
+                        {MEDIA_ACTIONS.map((item) => (
+                          <motion.button
+                            key={item.action}
+                            type="button"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => void runAdvancedAction(item.action)}
+                            className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-3 text-left transition-colors duration-300 hover:border-cyan-300/25"
+                          >
+                            <p className="text-sm font-light text-[#EAEAEA]">{item.label}</p>
+                            <p className="mt-1 text-[11px] leading-relaxed text-white/38">{item.description}</p>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={copySnapshot}
+                        className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-[11px] uppercase tracking-[0.2em] text-white/65 transition-colors duration-300 hover:border-cyan-300/25 hover:text-white/85"
                       >
-                        {actionMessage}
-                      </motion.p>
-                    ) : null}
-                  </AnimatePresence>
+                        Copy Snapshot
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRefresh}
+                        className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-[11px] uppercase tracking-[0.2em] text-white/65 transition-colors duration-300 hover:border-cyan-300/25 hover:text-white/85"
+                      >
+                        Refresh Analysis
+                      </button>
+                    </div>
+
+                    <AnimatePresence initial={false}>
+                      {actionMessage ? (
+                        <motion.p
+                          key={actionMessage}
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          className="text-[11px] text-white/44"
+                        >
+                          {actionMessage}
+                        </motion.p>
+                      ) : null}
+                    </AnimatePresence>
+                  </div>
                 </section>
 
                 <section className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
