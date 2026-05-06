@@ -129,6 +129,25 @@ function SettingsSection({ title, children }: { title: string; children: React.R
   );
 }
 
+const panelVariants = {
+  hidden: { opacity: 0, x: 16 },
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.22, 1, 0.36, 1],
+      staggerChildren: 0.05,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: 10, filter: "blur(4px)" },
+  show: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.4, ease: "easeOut" } },
+};
+
 const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: SettingsPanelProps) => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -138,16 +157,19 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full max-w-none border-l border-white/10 bg-black/85 p-0 text-[#EAEAEA] backdrop-blur-xl sm:w-[92vw] sm:max-w-[380px] lg:max-w-[420px]"
+        className="w-full max-w-none border-l border-white/10 bg-black/70 p-0 text-[#EAEAEA] backdrop-blur-2xl sm:w-[92vw] sm:max-w-[380px] lg:max-w-[420px]"
       >
-        <div className="flex h-full flex-col">
-          <SheetHeader className="space-y-1 px-4 pb-3 pt-5 text-left sm:px-5 sm:pt-6">
-            <SheetTitle className="text-sm font-light tracking-[0.2em] uppercase text-white/90">ZARA AI</SheetTitle>
-            <SheetDescription className="text-[11px] leading-relaxed text-white/45">Control layer for voice-first intelligence</SheetDescription>
-          </SheetHeader>
+        <motion.div className="flex h-full flex-col" variants={panelVariants} initial="hidden" animate="show">
+          <motion.div variants={itemVariants}>
+            <SheetHeader className="space-y-1 px-4 pb-3 pt-5 text-left sm:px-5 sm:pt-6">
+              <SheetTitle className="text-sm font-light tracking-[0.2em] uppercase text-white/90">ZARA AI</SheetTitle>
+              <SheetDescription className="text-[11px] leading-relaxed text-white/45">Control layer for voice-first intelligence</SheetDescription>
+            </SheetHeader>
+          </motion.div>
 
           <div className="no-scrollbar flex-1 space-y-7 overflow-y-auto px-4 pb-8 sm:space-y-8 sm:px-5">
-            <SettingsSection title="AI Control">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="AI Control">
               <SettingRow icon={BrainCircuit} label="Reasoning Mode" alignTop>
                 <SegmentedControl
                   value={settings.ai.responseMode}
@@ -209,8 +231,10 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 />
               </SettingRow>
             </SettingsSection>
+            </motion.div>
 
-            <SettingsSection title="Personality">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="Personality">
               <SettingRow icon={UserRound} label="Tone" alignTop>
                 <SegmentedControl
                   value={settings.personality.tone}
@@ -242,8 +266,10 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 />
               </SettingRow>
             </SettingsSection>
+            </motion.div>
 
-            <SettingsSection title="Voice">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="Voice">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-start gap-3 sm:items-center">
@@ -362,8 +388,10 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 </SettingRow>
               </div>
             </SettingsSection>
+            </motion.div>
 
-            <SettingsSection title="Orb Visuals">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="Orb Visuals">
               <SettingRow icon={Sparkles} label="Palette">
                 <Select
                   value={settings.orb.palette}
@@ -438,8 +466,10 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 />
               </div>
             </SettingsSection>
+            </motion.div>
 
-            <SettingsSection title="Mode">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="Mode">
               <SettingRow icon={Workflow} label="Presence" alignTop>
                 <SegmentedControl
                   value={settings.mode.presence}
@@ -456,8 +486,10 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 />
               </SettingRow>
             </SettingsSection>
+            </motion.div>
 
-            <SettingsSection title="Automation">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="Automation">
               <SettingRow icon={Workflow} label="Routines">
                 <Switch
                   checked={settings.automation.routines}
@@ -489,8 +521,10 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 />
               </SettingRow>
             </SettingsSection>
+            </motion.div>
 
-            <SettingsSection title="Memory">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="Memory">
               <SettingRow icon={BrainCircuit} label="Memory Layer">
                 <Switch
                   checked={settings.memory.memoryEnabled}
@@ -524,8 +558,10 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 />
               </SettingRow>
             </SettingsSection>
+            </motion.div>
 
-            <SettingsSection title="Privacy">
+            <motion.div variants={itemVariants}>
+              <SettingsSection title="Privacy">
               <SettingRow icon={Shield} label="On-device Processing">
                 <Switch
                   checked={settings.privacy.onDeviceOnly}
@@ -559,8 +595,9 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 />
               </SettingRow>
             </SettingsSection>
+            </motion.div>
 
-            <section className="space-y-3 pb-2">
+            <motion.section variants={itemVariants} className="space-y-3 pb-2">
               <button
                 type="button"
                 onClick={() => setAdvancedOpen((prev) => !prev)}
@@ -613,9 +650,9 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                   </motion.div>
                 ) : null}
               </AnimatePresence>
-            </section>
+            </motion.section>
           </div>
-        </div>
+        </motion.div>
       </SheetContent>
     </Sheet>
   );

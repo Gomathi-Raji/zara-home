@@ -236,25 +236,23 @@ const INITIAL_ROOM_DEVICES: RoomDevice[] = [
   { id: "door", label: "Door Lock", on: false, actionOn: "door_unlock", actionOff: "door_lock", description: "Entry safety control" },
 ];
 
-const panelEase = "easeOut" as const;
-
 const panelVariants = {
   hidden: { opacity: 0, x: 16 },
   show: {
     opacity: 1,
     x: 0,
     transition: {
-      duration: 0.35,
-      ease: panelEase,
-      staggerChildren: 0.06,
-      delayChildren: 0.04,
+      duration: 0.4,
+      ease: [0.22, 1, 0.36, 1],
+      staggerChildren: 0.05,
+      delayChildren: 0.05,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, x: 12, y: 6 },
-  show: { opacity: 1, x: 0, y: 0, transition: { duration: 0.3, ease: panelEase } },
+  hidden: { opacity: 0, x: 10, filter: "blur(4px)" },
+  show: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.4, ease: "easeOut" } },
 };
 
 const DashboardPanel = ({
@@ -404,7 +402,7 @@ const DashboardPanel = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-none border-l border-white/10 bg-black/85 p-0 text-[#EAEAEA] backdrop-blur-xl sm:w-[94vw] sm:max-w-[860px] lg:max-w-[1100px] xl:max-w-[1220px]">
+      <SheetContent side="right" className="w-full max-w-none border-l border-white/10 bg-black/70 p-0 text-[#EAEAEA] backdrop-blur-2xl sm:w-[94vw] sm:max-w-[860px] lg:max-w-[1100px] xl:max-w-[1220px]">
         <motion.div className="flex h-full flex-col" variants={panelVariants} initial="hidden" animate="show">
           <motion.div variants={itemVariants}>
             <SheetHeader className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">

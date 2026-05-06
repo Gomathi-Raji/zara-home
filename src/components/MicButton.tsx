@@ -8,27 +8,30 @@ interface MicButtonProps {
 }
 
 const MicButton = ({ isActive, onToggle, accentHue = 190 }: MicButtonProps) => {
-  const glowColor = `hsla(${accentHue}, 90%, 68%, 0.32)`;
+  const glowColor = `hsla(${accentHue}, 90%, 68%, 0.45)`;
+  const innerGlow = `hsla(${accentHue}, 90%, 68%, 0.2)`;
 
   return (
     <motion.button
       onClick={onToggle}
-      className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-black/70 text-foreground backdrop-blur-sm transition-colors"
-      style={{ boxShadow: isActive ? `0 0 28px ${glowColor}` : "0 0 0 transparent" }}
-      whileHover={{ scale: 1.08 }}
-      whileTap={{ scale: 0.95 }}
-      animate={isActive ? { scale: [1, 1.05, 1] } : {}}
-      transition={isActive ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : {}}
+      className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-black/40 text-foreground backdrop-blur-xl transition-all duration-500 overflow-hidden"
+      style={{ 
+        boxShadow: isActive ? `0 0 40px ${glowColor}, inset 0 0 20px ${innerGlow}` : "0 4px 20px rgba(0,0,0,0.5), inset 0 0 0 transparent" 
+      }}
+      whileHover={{ scale: 1.05, backgroundColor: "rgba(0,0,0,0.5)" }}
+      whileTap={{ scale: 0.9, backgroundColor: "rgba(0,0,0,0.7)" }}
+      animate={isActive ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+      transition={isActive ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : { type: "spring", stiffness: 400, damping: 25 }}
     >
       {isActive && (
         <motion.div
-          className="absolute inset-0 rounded-full border"
-          style={{ borderColor: `hsla(${accentHue}, 88%, 70%, 0.38)` }}
-          animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
+          className="absolute inset-0 rounded-full"
+          style={{ background: `radial-gradient(circle, ${innerGlow} 0%, transparent 70%)` }}
+          animate={{ scale: [0.8, 1.5], opacity: [0.8, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
         />
       )}
-      <Mic className="h-5 w-5 text-white/72" />
+      <Mic className="relative z-10 h-6 w-6 text-white/80 drop-shadow-md transition-colors" />
     </motion.button>
   );
 };
