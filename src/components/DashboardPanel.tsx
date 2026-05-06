@@ -236,6 +236,27 @@ const INITIAL_ROOM_DEVICES: RoomDevice[] = [
   { id: "door", label: "Door Lock", on: false, actionOn: "door_unlock", actionOff: "door_lock", description: "Entry safety control" },
 ];
 
+const panelEase = "easeOut" as const;
+
+const panelVariants = {
+  hidden: { opacity: 0, x: 16 },
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.35,
+      ease: panelEase,
+      staggerChildren: 0.06,
+      delayChildren: 0.04,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: 12, y: 6 },
+  show: { opacity: 1, x: 0, y: 0, transition: { duration: 0.3, ease: panelEase } },
+};
+
 const DashboardPanel = ({
   open,
   settings,
@@ -383,9 +404,10 @@ const DashboardPanel = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-full max-w-none border-r border-white/10 bg-black/85 p-0 text-[#EAEAEA] backdrop-blur-xl sm:w-[94vw] sm:max-w-[800px] lg:max-w-[860px]">
-        <div className="flex h-full flex-col">
-          <SheetHeader className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
+      <SheetContent side="right" className="w-full max-w-none border-l border-white/10 bg-black/85 p-0 text-[#EAEAEA] backdrop-blur-xl sm:w-[94vw] sm:max-w-[860px] lg:max-w-[1100px] xl:max-w-[1220px]">
+        <motion.div className="flex h-full flex-col" variants={panelVariants} initial="hidden" animate="show">
+          <motion.div variants={itemVariants}>
+            <SheetHeader className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <SheetTitle className="text-sm font-light tracking-[0.22em] text-[#EAEAEA] sm:text-base">Dashboard</SheetTitle>
@@ -403,19 +425,20 @@ const DashboardPanel = ({
                 Refresh
               </button>
             </div>
-          </SheetHeader>
+            </SheetHeader>
+          </motion.div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:space-y-5 sm:px-6 sm:py-5">
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:space-y-5 sm:px-6 sm:py-5 no-scrollbar">
+            <motion.section variants={itemVariants} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <MetricCard icon={Cpu} label="Backend" value={backendHealth ?? "Checking..."} hint="API health" />
               <MetricCard icon={Home} label="Broker" value={homeStatus?.broker ?? "Unknown"} hint={connected ? "MQTT connected" : "MQTT disconnected"} />
               <MetricCard icon={BrainCircuit} label="AI Mode" value={settings.ai.responseMode} hint="Current routing" />
               <MetricCard icon={Signal} label="Orb State" value={orbState} hint={`Emotion ${lastEmotion} · ${lastLanguage}`} />
               <MetricCard icon={Waves} label="Voice Signal" value={`Vol ${Math.round(voiceSignal.volume * 100)}%`} hint={`Pitch ${Math.round(voiceSignal.pitch)}Hz`} />
               <MetricCard icon={Clock3} label="Snapshot Age" value={snapshotAgeLabel} hint={dashboardUpdatedAt ?? dashboardStatusMessage ?? "Waiting"} />
-            </section>
+            </motion.section>
 
-            <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+            <motion.section variants={itemVariants} className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
               <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
                 <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/38">
                   <Gauge className="h-4 w-4 text-cyan-100/75" /> Ecosystem Analysis
@@ -511,7 +534,7 @@ const DashboardPanel = ({
               </div>
 
               <div className="space-y-4">
-                <section className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
+                <motion.section variants={itemVariants} className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/38">
                     <Activity className="h-4 w-4 text-cyan-100/75" /> Room Profile
                   </div>
@@ -556,9 +579,9 @@ const DashboardPanel = ({
                       );
                     })}
                   </div>
-                </section>
+                </motion.section>
 
-                <section className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
+                <motion.section variants={itemVariants} className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/38">
                     <PlugZap className="h-4 w-4 text-cyan-100/75" /> More Options
                   </div>
@@ -665,9 +688,9 @@ const DashboardPanel = ({
                       ) : null}
                     </AnimatePresence>
                   </div>
-                </section>
+                </motion.section>
 
-                <section className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
+                <motion.section variants={itemVariants} className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.025] p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/38">
                     <Sparkles className="h-4 w-4 text-cyan-100/75" /> Live Activity
                   </div>
@@ -696,11 +719,11 @@ const DashboardPanel = ({
                       </div>
                     </div>
                   </div>
-                </section>
+                </motion.section>
               </div>
-            </section>
+            </motion.section>
           </div>
-        </div>
+        </motion.div>
       </SheetContent>
     </Sheet>
   );
