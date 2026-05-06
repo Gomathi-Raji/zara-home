@@ -69,6 +69,8 @@ const Orb = ({ state, audioStream, visuals }: OrbProps) => {
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const timeRef = useRef(0);
   const stateRef = useRef<OrbState>(state);
+  const hueOffsetRef = useRef(0);
+  const varianceRef = useRef(0);
   const visualsRef = useRef({
     hue: 190,
     intensity: 68,
@@ -160,8 +162,19 @@ const Orb = ({ state, audioStream, visuals }: OrbProps) => {
       const intensityFactor = 0.55 + currentVisuals.intensity / 100;
       const reactivityFactor = 0.35 + currentVisuals.reactivity / 100;
       const dimFactor = currentVisuals.dimmed ? 0.6 : 1;
-      const stateHueOffset =
-        currentState === "listening" ? 16 : currentState === "thinking" ? -20 : currentState === "speaking" ? 30 : 0;
+
+      let targetHueOffset = 0;
+      let targetVariance = 10;
+      switch (currentState) {
+        case "idle": targetHueOffset = 0; targetVariance = 15; break;
+        case "listening": targetHueOffset = -70; targetVariance = 50; break;
+        case "thinking": targetHueOffset = 90; targetVariance = 140; break;
+        case "speaking": targetHueOffset = 180; targetVariance = 30; break;
+      }
+      hueOffsetRef.current += (targetHueOffset - hueOffsetRef.current) * 0.04;
+      varianceRef.current += (targetVariance - varianceRef.current) * 0.04;
+      
+      const stateHueOffset = hueOffsetRef.current;
       const hueOscillation = Math.sin(t * 0.85) * 12 + Math.cos(t * 0.37) * 6;
       const audioHueBoost = audio.overall * 28;
       const dynamicBaseHue = (currentVisuals.hue + stateHueOffset + hueOscillation + audioHueBoost + 360) % 360;
@@ -187,31 +200,32 @@ const Orb = ({ state, audioStream, visuals }: OrbProps) => {
 
       switch (currentState) {
         case "idle":
-          rotationSpeed = 0.15;
-          breatheAmp = 3;
-          breatheSpeed = 0.5;
+          rotationSpeed = 0.18;
+          breatheAmp = 4;
+          breatheSpeed = 0.6;
           scatterMultiplier = 1;
+          turbulence = 1;
           break;
         case "listening":
-          rotationSpeed = 0.3;
-          breatheAmp = 8 + audio.overall * 30;
-          breatheSpeed = 1;
-          scatterMultiplier = 1 + audio.bass * 1.5;
-          turbulence = audio.high * 15;
+          rotationSpeed = 0.45;
+          breatheAmp = 12 + audio.overall * 40;
+          breatheSpeed = 1.5;
+          scatterMultiplier = 1.05 + audio.bass * 2;
+          turbulence = 10 + audio.high * 20;
           break;
         case "thinking":
-          rotationSpeed = 0.6;
-          breatheAmp = 5;
-          breatheSpeed = 0.8;
-          scatterMultiplier = 1.1;
-          turbulence = 3;
+          rotationSpeed = 0.9;
+          breatheAmp = 8;
+          breatheSpeed = 2.2;
+          scatterMultiplier = 1.15;
+          turbulence = 18;
           break;
         case "speaking":
-          rotationSpeed = 0.25;
-          breatheAmp = 10 + audio.overall * 25;
-          breatheSpeed = 1.2;
-          scatterMultiplier = 1 + audio.mid * 1.2;
-          turbulence = audio.high * 10;
+          rotationSpeed = 0.35;
+          breatheAmp = 15 + audio.overall * 35;
+          breatheSpeed = 1.8;
+          scatterMultiplier = 1.1 + audio.mid * 1.5;
+          turbulence = 6 + audio.high * 15;
           break;
       }
 
@@ -265,7 +279,8 @@ const Orb = ({ state, audioStream, visuals }: OrbProps) => {
       for (const p of projected) {
         const depthHueShift = (p.z / (BASE_RADIUS * 1.8)) * 24;
         const shimmerHueShift = Math.sin(t * 1.4 + p.x * 0.025 + p.y * 0.02) * 6;
-        const particleHue = (dynamicBaseHue + depthHueShift + shimmerHueShift + 360) % 360;
+        const varianceShift = Math.sin(p.z * 0.05 + p.x * 0.05 + t * 3) * varianceRef.current;
+        const particleHue = (dynamicBaseHue + depthHueShift + shimmerHueShift + varianceShift + 360) % 360;
         const particleLightness = clamp(lightness + (p.z / (BASE_RADIUS * 2.2)) * 8, 55, 96);
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);

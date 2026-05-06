@@ -87,7 +87,7 @@ export const defaultSettings: ZaraSettings = {
   },
   mode: {
     presence: "virtual",
-    homeAutomation: false,
+    homeAutomation: true,
   },
   automation: {
     routines: true,

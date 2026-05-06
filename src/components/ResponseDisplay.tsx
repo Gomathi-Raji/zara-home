@@ -7,31 +7,36 @@ interface ResponseDisplayProps {
 }
 
 const ResponseDisplay = ({ text, subtext }: ResponseDisplayProps) => {
-  return (
-    <div className="absolute bottom-32 z-10 flex w-full flex-col items-center gap-2 px-6 text-center">
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={text}
-          className="text-sm font-light text-foreground/90 tracking-wide"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-        >
-          {text}
-        </motion.p>
-      </AnimatePresence>
+  if (!text || text.trim() === "") {
+    return null;
+  }
 
-      {subtext && (
-        <motion.p
-          className="text-xs font-thin text-muted-foreground/50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.22, duration: 0.45 }}
+  return (
+    <div className="absolute bottom-24 z-10 flex w-full flex-col items-center px-6 text-center pointer-events-none">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={text}
+          initial={{ opacity: 0, y: 16, filter: "blur(8px)", scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
+          exit={{ opacity: 0, y: -16, filter: "blur(8px)", scale: 0.96 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-2xl rounded-2xl bg-black/10 px-6 py-4 backdrop-blur-xl border border-white/10 shadow-2xl"
         >
-          {subtext}
-        </motion.p>
-      )}
+          <p className="text-base sm:text-lg md:text-xl font-medium tracking-wide text-foreground/95 drop-shadow-md">
+            {text}
+          </p>
+          {subtext && (
+            <motion.p
+              className="mt-2 text-xs sm:text-sm font-light tracking-wider text-muted-foreground/80 drop-shadow-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              {subtext}
+            </motion.p>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };

@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import ZaraCore from "@/components/ZaraCore";
 import VoiceController from "@/components/VoiceController";
 import ResponseDisplay from "@/components/ResponseDisplay";
-import ModeToggle from "@/components/ModeToggle";
-import DeviceControlPanel from "@/components/DeviceControlPanel";
+import DashboardPanel from "@/components/DashboardPanel";
 import SettingsPanel from "@/components/SettingsPanel";
 import TopBar from "@/components/TopBar";
 import { defaultSettings, orbPaletteHues, type VoicePersona, type ZaraSettings } from "@/lib/settings";
 import {
   checkHealth,
+  getHomeAutomationStatus,
+  getHomeStatus,
   processVoice,
   setMode,
   setHomeAutomationEnabled,
@@ -25,6 +26,17 @@ type OrbState = "idle" | "listening" | "thinking" | "speaking";
 
 const AUTO_STOP_MS = 4500;
 const LOOP_RESTART_DELAY_MS = 520;
+const DEFAULT_ASSISTANT_GREETING = "Hello, I'm ZARA.";
+
+function isGenericVoiceProgressHint(hint: string): boolean {
+  return (
+    hint === "Processing voice with ZARA backend..." ||
+    hint === "Sending voice chunk..." ||
+    hint === "Auto-sending voice chunk..." ||
+    hint === "Loop: sending voice chunk..." ||
+    hint === "Continuous loop active..."
+  );
+}
 
 function chooseRecorderMimeType(): string | undefined {
   if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") {
@@ -307,15 +319,22 @@ function pickPreferredVoice(
 const Index = () => {
   const [orbState, setOrbState] = useState<OrbState>("idle");
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<ZaraSettings>(defaultSettings);
-  const [assistantText, setAssistantText] = useState("Hello, I'm ZARA.");
+  const [assistantText, setAssistantText] = useState("");
+  const [showIntroGreeting, setShowIntroGreeting] = useState(true);
   const [lastTranscript, setLastTranscript] = useState("");
   const [lastLanguage, setLastLanguage] = useState("en");
   const [lastEmotion, setLastEmotion] = useState<BackendEmotion>("neutral");
   const [runtimeHint, setRuntimeHint] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceSignal, setVoiceSignal] = useState({ volume: 0, pitch: 160 });
+  const [backendHealth, setBackendHealth] = useState<string | null>(null);
+  const [homeAutomationEnabled, setHomeAutomationEnabledState] = useState<boolean | null>(null);
+  const [homeStatus, setHomeStatus] = useState<HomeStatusResponse | null>(null);
+  const [dashboardUpdatedAt, setDashboardUpdatedAt] = useState<string | null>(null);
+  const [dashboardStatusMessage, setDashboardStatusMessage] = useState<string | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -654,10 +673,10 @@ const Index = () => {
 
       setOrbState("thinking");
       setRuntimeHint("Processing voice with ZARA backend...");
+      setShowIntroGreeting(false);
 
       try {
-        const response = await sendVoiceChunk(audioChunk, settings.ai.responseMode, settings.voice.language);
-          const response = await processVoice(audioChunk, settings.ai.responseMode, settings.voice.language);
+        const response = await processVoice(audioChunk, settings.ai.responseMode, settings.voice.language);
         if (!mountedRef.current) return;
 
         setAssistantText(response.text);
@@ -708,30 +727,32 @@ const Index = () => {
       } catch (error) {
         if (!mountedRef.current) return;
 
+        setShowIntroGreeting(false);
         const message = error instanceof Error ? error.message : "Voice request failed";
         setAssistantText("I couldn't process that voice request. Please try again.");
         setRuntimeHint(message);
       } finally {
-        if (!mountedRef.current) return;
-        setOrbState("idle");
-        setIsProcessing(false);
+        if (mountedRef.current) {
+          setOrbState("idle");
+          setIsProcessing(false);
 
-        if (shouldContinueLoop && continuousLoopRef.current) {
-          setRuntimeHint("Continuous loop active...");
-          clearLoopRestart();
-          loopRestartTimerRef.current = window.setTimeout(() => {
-            if (!mountedRef.current) {
-              return;
-            }
-            if (isProcessingRef.current) {
-              return;
-            }
-            void startListening(true);
-          }, LOOP_RESTART_DELAY_MS);
+          if (shouldContinueLoop && continuousLoopRef.current) {
+            setRuntimeHint("Continuous loop active...");
+            clearLoopRestart();
+            loopRestartTimerRef.current = window.setTimeout(() => {
+              if (!mountedRef.current) {
+                return;
+              }
+              if (isProcessingRef.current) {
+                return;
+              }
+              void startListening(true);
+            }, LOOP_RESTART_DELAY_MS);
+          }
         }
       }
     },
-    [clearLoopRestart, handleAutomationAction, settings.ai.responseMode, speakResponse, startListening],
+    [clearLoopRestart, handleAutomationAction, settings.ai.responseMode, settings.voice.language, speakResponse, startListening],
   );
 
   useEffect(() => {
@@ -817,6 +838,52 @@ const Index = () => {
     };
   }, [settings.mode.homeAutomation]);
 
+  const refreshDashboard = useCallback(async () => {
+    const [healthResult, homeAutomationResult, homeStatusResult] = await Promise.allSettled([
+      checkHealth(),
+      getHomeAutomationStatus(),
+      getHomeStatus(),
+    ]);
+
+    const messages: string[] = [];
+
+    if (healthResult.status === "fulfilled") {
+      setBackendHealth(healthResult.value.status);
+    } else {
+      messages.push(healthResult.reason instanceof Error ? healthResult.reason.message : "Backend health unavailable");
+    }
+
+    if (homeAutomationResult.status === "fulfilled") {
+      setHomeAutomationEnabledState(homeAutomationResult.value.enabled);
+    } else {
+      messages.push(homeAutomationResult.reason instanceof Error ? homeAutomationResult.reason.message : "Home automation status unavailable");
+    }
+
+    if (homeStatusResult.status === "fulfilled") {
+      setHomeStatus(homeStatusResult.value);
+    } else {
+      messages.push(homeStatusResult.reason instanceof Error ? homeStatusResult.reason.message : "MQTT status unavailable");
+    }
+
+    setDashboardUpdatedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    setDashboardStatusMessage(messages.length ? messages[0] : "Live dashboard refreshed");
+  }, []);
+
+  useEffect(() => {
+    if (!dashboardOpen) {
+      return;
+    }
+
+    void refreshDashboard();
+    const intervalId = window.setInterval(() => {
+      void refreshDashboard();
+    }, 12000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [dashboardOpen, refreshDashboard]);
+
   // Check backend health on mount
   useEffect(() => {
     let active = true;
@@ -844,11 +911,20 @@ const Index = () => {
     if (orbState === "thinking") {
       return settings.ai.responseMode === "offline" ? "Processing locally..." : "Thinking...";
     }
+
     return assistantText;
-  }, [assistantText, orbState, settings.ai.responseMode]);
+  }, [assistantText, lastTranscript, orbState, runtimeHint, settings.ai.responseMode]);
+
+  const heroSubtitle = useMemo(() => {
+    if (!runtimeHint || isGenericVoiceProgressHint(runtimeHint)) {
+      return undefined;
+    }
+
+    return runtimeHint;
+  }, [runtimeHint]);
 
   const subtext = useMemo(() => {
-    if (runtimeHint) {
+    if (runtimeHint && !isGenericVoiceProgressHint(runtimeHint)) {
       return runtimeHint;
     }
 
@@ -866,12 +942,10 @@ const Index = () => {
       return `Heard: ${truncate(lastTranscript, 90)}`;
     }
 
-    if (settings.ai.continuousLoop) {
-      return "Continuous loop is active. ZARA will keep listening after replies.";
-    }
+    return "";
+  }, [lastEmotion, lastLanguage, lastTranscript, orbState, runtimeHint]);
 
-    return settings.ai.proactiveHints ? "Speak naturally. ZARA can suggest next actions." : "How can I help you?";
-  }, [lastEmotion, lastLanguage, lastTranscript, orbState, runtimeHint, settings.ai.continuousLoop, settings.ai.proactiveHints]);
+  const heroTitle = showIntroGreeting ? DEFAULT_ASSISTANT_GREETING : "";
 
   const orbVisuals = useMemo(
     () => ({
@@ -891,6 +965,8 @@ const Index = () => {
     if (isProcessingRef.current) {
       return;
     }
+
+    setShowIntroGreeting(false);
 
     if (orbState === "listening") {
       if (settings.ai.continuousLoop) {
@@ -941,18 +1017,31 @@ const Index = () => {
       <TopBar
         mode={settings.ai.responseMode}
         presence={settings.mode.presence}
-        homeAutomation={settings.mode.homeAutomation}
+        homeAutomation={homeAutomationEnabled ?? settings.mode.homeAutomation}
         continuousLoop={settings.ai.continuousLoop}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenDashboard={() => {
+          setSettingsOpen(false);
+          setDashboardOpen(true);
+        }}
+        onOpenSettings={() => {
+          setDashboardOpen(false);
+          setSettingsOpen(true);
+        }}
       />
 
       {/* Orb */}
       <motion.div
         className="relative z-10 flex flex-1 items-center justify-center"
-        animate={settingsOpen ? { opacity: 0.55, scale: 1.12, x: -30 } : { opacity: 1, scale: 1.24, x: 0 }}
+        animate={
+          dashboardOpen
+            ? { opacity: 0.55, scale: 1.08, x: 30 }
+            : settingsOpen
+              ? { opacity: 0.55, scale: 1.12, x: -30 }
+              : { opacity: 1, scale: 1.24, x: 0 }
+        }
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        <ZaraCore state={orbState} audioStream={audioStream} visuals={orbVisuals} title={assistantText} subtitle={runtimeHint || undefined} />
+        <ZaraCore state={orbState} audioStream={audioStream} visuals={orbVisuals} title={heroTitle} subtitle={heroSubtitle} />
       </motion.div>
 
       {/* Text */}
@@ -961,20 +1050,38 @@ const Index = () => {
       {/* Mic */}
       <VoiceController orbState={orbState} onToggle={handleMicToggle} accentHue={orbVisuals.hue} />
 
-      <ModeToggle
-        mode={settings.ai.responseMode}
-        continuousLoop={settings.ai.continuousLoop}
-        onSetMode={(m) => setSettings((prev) => ({ ...prev, ai: { ...prev.ai, responseMode: m } }))}
-        onToggleLoop={() => setSettings((prev) => ({ ...prev, ai: { ...prev.ai, continuousLoop: !prev.ai.continuousLoop } }))}
-      />
-
-      <DeviceControlPanel
-        onStatusChange={(message) => setRuntimeHint(message)}
+      <DashboardPanel
+        open={dashboardOpen}
+        onOpenChange={(open) => {
+          setDashboardOpen(open);
+          if (open) {
+            setSettingsOpen(false);
+          }
+        }}
+        settings={settings}
+        orbState={orbState}
+        assistantText={assistantText}
+        runtimeHint={runtimeHint}
+        lastTranscript={lastTranscript}
+        lastLanguage={lastLanguage}
+        lastEmotion={lastEmotion}
+        voiceSignal={voiceSignal}
+        backendHealth={backendHealth}
+        homeAutomationEnabled={homeAutomationEnabled}
+        homeStatus={homeStatus}
+        dashboardUpdatedAt={dashboardUpdatedAt}
+        dashboardStatusMessage={dashboardStatusMessage}
+        onRefresh={refreshDashboard}
       />
 
       <SettingsPanel
         open={settingsOpen}
-        onOpenChange={setSettingsOpen}
+        onOpenChange={(open) => {
+          setSettingsOpen(open);
+          if (open) {
+            setDashboardOpen(false);
+          }
+        }}
         settings={settings}
         onSettingsChange={setSettings}
       />

@@ -4,15 +4,15 @@
 #include <ArduinoJson.h>
 #include <ESP32Servo.h>
 
-// Wi-Fi
-const char* WIFI_SSID = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+// WiFi credentials
+const char* WIFI_SSID = "Zayma";
+const char* WIFI_PASSWORD = "reddragon";
 
-// MQTT
-const char* MQTT_HOST = "YOUR_MQTT_HOST";
-const uint16_t MQTT_PORT = 1883;
-const char* MQTT_USER = "";
-const char* MQTT_PASSWORD = "";
+// MQTT broker (HiveMQ Cloud)
+const char* MQTT_HOST = "e5c35c674acb4ec6bdb8514fa465cfa6.s1.eu.hivemq.cloud";
+const uint16_t MQTT_PORT = 8883;
+const char* MQTT_USER = "Zayma";
+const char* MQTT_PASSWORD = "Reddragon123";
 const char* TOPIC_CONTROL = "zara/home/control";
 const char* TOPIC_STATUS = "zara/home/status";
 
