@@ -24,7 +24,7 @@ const ZaraCore = ({ state, audioStream, visuals, title = "Hello, I'm ZARA.", sub
         <Orb state={state} audioStream={audioStream} visuals={visuals} />
       </motion.div>
 
-      <div className="absolute bottom-40 z-20 flex w-full flex-col items-center px-6 text-center">
+      <div className="absolute bottom-32 z-20 flex w-full flex-col items-center px-6 text-center">
         <motion.h2
           className="text-lg font-medium text-foreground/95"
           initial={{ opacity: 0, y: 6 }}

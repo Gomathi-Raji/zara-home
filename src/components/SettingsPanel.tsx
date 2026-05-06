@@ -455,21 +455,6 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                   options={presenceOptions}
                 />
               </SettingRow>
-              <SettingRow icon={Radar} label="Home Automation" hint="Enable MQTT control for smart devices">
-                <Switch
-                  checked={settings.mode.homeAutomation}
-                  onCheckedChange={(checked) =>
-                    update({
-                      ...settings,
-                      mode: {
-                        ...settings.mode,
-                        homeAutomation: checked,
-                      },
-                    })
-                  }
-                  className="data-[state=checked]:bg-cyan-300/85 data-[state=unchecked]:bg-white/15"
-                />
-              </SettingRow>
             </SettingsSection>
 
             <SettingsSection title="Automation">
