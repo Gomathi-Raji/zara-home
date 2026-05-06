@@ -109,13 +109,13 @@ function SegmentedControl<T extends string>({
 
 function SettingRow({ icon: Icon, label, hint, children, alignTop = false }: SettingRowProps) {
   return (
-    <div className={cn("flex items-center gap-3", alignTop && "items-start")}>
+    <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center", alignTop && "sm:items-start")}>
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-white/38" />
       <div className="min-w-0 flex-1">
         <p className="text-[12px] font-light tracking-wide text-[#EAEAEA]">{label}</p>
         {hint ? <p className="text-[11px] text-white/40">{hint}</p> : null}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className="shrink-0 self-start sm:self-auto">{children}</div>
     </div>
   );
 }
@@ -138,15 +138,15 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[92vw] max-w-[360px] border-l border-white/10 bg-black/85 p-0 text-[#EAEAEA] backdrop-blur-xl sm:max-w-[380px]"
+        className="w-full max-w-none border-l border-white/10 bg-black/85 p-0 text-[#EAEAEA] backdrop-blur-xl sm:w-[92vw] sm:max-w-[380px] lg:max-w-[420px]"
       >
         <div className="flex h-full flex-col">
-          <SheetHeader className="space-y-1 px-5 pb-3 pt-6 text-left">
+          <SheetHeader className="space-y-1 px-4 pb-3 pt-5 text-left sm:px-5 sm:pt-6">
             <SheetTitle className="text-sm font-light tracking-[0.2em] uppercase text-white/90">ZARA AI</SheetTitle>
-            <SheetDescription className="text-[11px] text-white/45">Control layer for voice-first intelligence</SheetDescription>
+            <SheetDescription className="text-[11px] leading-relaxed text-white/45">Control layer for voice-first intelligence</SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 space-y-8 overflow-y-auto px-5 pb-8">
+          <div className="flex-1 space-y-7 overflow-y-auto px-4 pb-8 sm:space-y-8 sm:px-5">
             <SettingsSection title="AI Control">
               <SettingRow icon={BrainCircuit} label="Reasoning Mode" alignTop>
                 <SegmentedControl
@@ -246,7 +246,7 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
             <SettingsSection title="Voice">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 sm:items-center">
                     <Mic2 className="h-4 w-4 shrink-0 text-white/38" />
                     <div className="min-w-0 flex-1">
                       <p className="text-[12px] font-light tracking-wide text-[#EAEAEA]">Mic Sensitivity</p>
@@ -271,7 +271,7 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 sm:items-center">
                     <Radar className="h-4 w-4 shrink-0 text-white/38" />
                     <div className="min-w-0 flex-1">
                       <p className="text-[12px] font-light tracking-wide text-[#EAEAEA]">Voice Speed</p>
@@ -308,7 +308,7 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                       })
                     }
                   >
-                    <SelectTrigger className="h-8 w-[148px] rounded-full border-white/10 bg-white/[0.02] px-3 text-xs text-white/80 focus:ring-1 focus:ring-cyan-300/30">
+                    <SelectTrigger className="h-8 w-full min-w-0 rounded-full border-white/10 bg-white/[0.02] px-3 text-xs text-white/80 focus:ring-1 focus:ring-cyan-300/30 sm:w-[148px]">
                       <SelectValue placeholder="Language" />
                     </SelectTrigger>
                     <SelectContent className="border-white/10 bg-black text-white">
@@ -334,7 +334,7 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
                       })
                     }
                   >
-                    <SelectTrigger className="h-8 w-[148px] rounded-full border-white/10 bg-white/[0.02] px-3 text-xs text-white/80 focus:ring-1 focus:ring-cyan-300/30">
+                    <SelectTrigger className="h-8 w-full min-w-0 rounded-full border-white/10 bg-white/[0.02] px-3 text-xs text-white/80 focus:ring-1 focus:ring-cyan-300/30 sm:w-[148px]">
                       <SelectValue placeholder="Engine" />
                     </SelectTrigger>
                     <SelectContent className="border-white/10 bg-black text-white">
@@ -389,7 +389,7 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
               </SettingRow>
 
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 sm:items-center">
                   <Sparkles className="h-4 w-4 shrink-0 text-white/38" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-light tracking-wide text-[#EAEAEA]">Intensity</p>
@@ -414,7 +414,7 @@ const SettingsPanel = ({ open, settings, onOpenChange, onSettingsChange }: Setti
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 sm:items-center">
                   <Radar className="h-4 w-4 shrink-0 text-white/38" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-light tracking-wide text-[#EAEAEA]">Reactivity</p>

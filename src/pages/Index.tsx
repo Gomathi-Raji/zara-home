@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import ZaraCore from "@/components/ZaraCore";
 import VoiceController from "@/components/VoiceController";
 import ResponseDisplay from "@/components/ResponseDisplay";
-import DeviceControlPanel from "@/components/DeviceControlPanel";
+import DashboardPanel from "@/components/DashboardPanel";
 import SettingsPanel from "@/components/SettingsPanel";
 import TopBar from "@/components/TopBar";
 import { defaultSettings, orbPaletteHues, type VoicePersona, type ZaraSettings } from "@/lib/settings";
 import {
   checkHealth,
+  getHomeAutomationStatus,
+  getHomeStatus,
   processVoice,
   setMode,
   setHomeAutomationEnabled,
@@ -317,6 +319,7 @@ function pickPreferredVoice(
 const Index = () => {
   const [orbState, setOrbState] = useState<OrbState>("idle");
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<ZaraSettings>(defaultSettings);
   const [assistantText, setAssistantText] = useState("");
@@ -327,6 +330,11 @@ const Index = () => {
   const [runtimeHint, setRuntimeHint] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceSignal, setVoiceSignal] = useState({ volume: 0, pitch: 160 });
+  const [backendHealth, setBackendHealth] = useState<string | null>(null);
+  const [homeAutomationEnabled, setHomeAutomationEnabledState] = useState<boolean | null>(null);
+  const [homeStatus, setHomeStatus] = useState<HomeStatusResponse | null>(null);
+  const [dashboardUpdatedAt, setDashboardUpdatedAt] = useState<string | null>(null);
+  const [dashboardStatusMessage, setDashboardStatusMessage] = useState<string | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -819,7 +827,7 @@ const Index = () => {
 
   useEffect(() => {
     let active = true;
-    setHomeAutomationEnabled(true).catch((error) => {
+    setHomeAutomationEnabled(settings.mode.homeAutomation).catch((error) => {
       if (!active) return;
       const message = error instanceof Error ? error.message : "Unable to sync Home Automation mode";
       setRuntimeHint(message);
@@ -828,7 +836,53 @@ const Index = () => {
     return () => {
       active = false;
     };
+  }, [settings.mode.homeAutomation]);
+
+  const refreshDashboard = useCallback(async () => {
+    const [healthResult, homeAutomationResult, homeStatusResult] = await Promise.allSettled([
+      checkHealth(),
+      getHomeAutomationStatus(),
+      getHomeStatus(),
+    ]);
+
+    const messages: string[] = [];
+
+    if (healthResult.status === "fulfilled") {
+      setBackendHealth(healthResult.value.status);
+    } else {
+      messages.push(healthResult.reason instanceof Error ? healthResult.reason.message : "Backend health unavailable");
+    }
+
+    if (homeAutomationResult.status === "fulfilled") {
+      setHomeAutomationEnabledState(homeAutomationResult.value.enabled);
+    } else {
+      messages.push(homeAutomationResult.reason instanceof Error ? homeAutomationResult.reason.message : "Home automation status unavailable");
+    }
+
+    if (homeStatusResult.status === "fulfilled") {
+      setHomeStatus(homeStatusResult.value);
+    } else {
+      messages.push(homeStatusResult.reason instanceof Error ? homeStatusResult.reason.message : "MQTT status unavailable");
+    }
+
+    setDashboardUpdatedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    setDashboardStatusMessage(messages.length ? messages[0] : "Live dashboard refreshed");
   }, []);
+
+  useEffect(() => {
+    if (!dashboardOpen) {
+      return;
+    }
+
+    void refreshDashboard();
+    const intervalId = window.setInterval(() => {
+      void refreshDashboard();
+    }, 12000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [dashboardOpen, refreshDashboard]);
 
   // Check backend health on mount
   useEffect(() => {
@@ -963,15 +1017,28 @@ const Index = () => {
       <TopBar
         mode={settings.ai.responseMode}
         presence={settings.mode.presence}
-        homeAutomation
+        homeAutomation={homeAutomationEnabled ?? settings.mode.homeAutomation}
         continuousLoop={settings.ai.continuousLoop}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenDashboard={() => {
+          setSettingsOpen(false);
+          setDashboardOpen(true);
+        }}
+        onOpenSettings={() => {
+          setDashboardOpen(false);
+          setSettingsOpen(true);
+        }}
       />
 
       {/* Orb */}
       <motion.div
         className="relative z-10 flex flex-1 items-center justify-center"
-        animate={settingsOpen ? { opacity: 0.55, scale: 1.12, x: -30 } : { opacity: 1, scale: 1.24, x: 0 }}
+        animate={
+          dashboardOpen
+            ? { opacity: 0.55, scale: 1.08, x: 30 }
+            : settingsOpen
+              ? { opacity: 0.55, scale: 1.12, x: -30 }
+              : { opacity: 1, scale: 1.24, x: 0 }
+        }
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
         <ZaraCore state={orbState} audioStream={audioStream} visuals={orbVisuals} title={heroTitle} subtitle={heroSubtitle} />
@@ -983,13 +1050,38 @@ const Index = () => {
       {/* Mic */}
       <VoiceController orbState={orbState} onToggle={handleMicToggle} accentHue={orbVisuals.hue} />
 
-      <DeviceControlPanel
-        onStatusChange={(message) => setRuntimeHint(message)}
+      <DashboardPanel
+        open={dashboardOpen}
+        onOpenChange={(open) => {
+          setDashboardOpen(open);
+          if (open) {
+            setSettingsOpen(false);
+          }
+        }}
+        settings={settings}
+        orbState={orbState}
+        assistantText={assistantText}
+        runtimeHint={runtimeHint}
+        lastTranscript={lastTranscript}
+        lastLanguage={lastLanguage}
+        lastEmotion={lastEmotion}
+        voiceSignal={voiceSignal}
+        backendHealth={backendHealth}
+        homeAutomationEnabled={homeAutomationEnabled}
+        homeStatus={homeStatus}
+        dashboardUpdatedAt={dashboardUpdatedAt}
+        dashboardStatusMessage={dashboardStatusMessage}
+        onRefresh={refreshDashboard}
       />
 
       <SettingsPanel
         open={settingsOpen}
-        onOpenChange={setSettingsOpen}
+        onOpenChange={(open) => {
+          setSettingsOpen(open);
+          if (open) {
+            setDashboardOpen(false);
+          }
+        }}
         settings={settings}
         onSettingsChange={setSettings}
       />
